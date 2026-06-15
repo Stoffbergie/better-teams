@@ -30,7 +30,7 @@ export function useTeamsSession(): {
   refetch: () => Promise<unknown>;
 } {
   const { activeTenantId, activeSession } = useTeamsAccountContext();
-  const query = useQuery({
+  const { data, error, isError, isFetching, isPending, refetch } = useQuery({
     queryKey: teamsKeys.session(activeTenantId),
     queryFn: () => teamsSessionService.initialize(activeTenantId),
     initialData: activeSession,
@@ -42,12 +42,12 @@ export function useTeamsSession(): {
 
   return {
     tenantId: activeTenantId,
-    session: query.data ?? activeSession,
-    isPending: query.isPending,
-    isFetching: query.isFetching,
-    isError: query.isError,
-    error: query.error instanceof Error ? query.error : null,
-    refetch: query.refetch,
+    session: data ?? activeSession,
+    isPending,
+    isFetching,
+    isError,
+    error: error instanceof Error ? error : null,
+    refetch,
   };
 }
 
@@ -64,24 +64,26 @@ export function useTeamsConversations(liveSessionReady: boolean): {
   const documentVisible = useDocumentVisibility();
   const resumeReady = useResumeCooldown();
 
-  const query = useQuery({
-    queryKey: teamsKeys.conversations(activeTenantId),
-    queryFn: () => teamsConversationService.list(activeTenantId, 100),
-    enabled: liveSessionReady,
-    staleTime: 30_000,
-    refetchInterval: () =>
-      liveSessionReady && documentVisible && resumeReady ? 30_000 : false,
-    refetchIntervalInBackground: false,
-  });
+  const { data, isError, isFetching, isPending, isSuccess, refetch } = useQuery(
+    {
+      queryKey: teamsKeys.conversations(activeTenantId),
+      queryFn: () => teamsConversationService.list(activeTenantId, 100),
+      enabled: liveSessionReady,
+      staleTime: 30_000,
+      refetchInterval: () =>
+        liveSessionReady && documentVisible && resumeReady ? 30_000 : false,
+      refetchIntervalInBackground: false,
+    },
+  );
 
   return {
     tenantId: activeTenantId,
-    conversations: query.data ?? EMPTY_CONVERSATIONS,
-    isPending: query.isPending,
-    isFetching: query.isFetching,
-    isError: query.isError,
-    isSuccess: query.isSuccess,
-    refetch: query.refetch,
+    conversations: data ?? EMPTY_CONVERSATIONS,
+    isPending,
+    isFetching,
+    isError,
+    isSuccess,
+    refetch,
   };
 }
 

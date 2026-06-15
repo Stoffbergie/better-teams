@@ -161,7 +161,7 @@ export function useProductivityWorkspaceController() {
       ? selectedId
       : null;
   }, [conversations, selectedId]);
-  const openConversationRequest = useQuery({
+  const { data: openConversationRequest } = useQuery({
     queryKey: ["open-conversation-request"],
     queryFn: async () => null as string | null,
     enabled: false,
@@ -173,7 +173,7 @@ export function useProductivityWorkspaceController() {
   const selectedItem = activeConversationId
     ? (sidebarItemById[activeConversationId] ?? null)
     : null;
-  const selectedThreadMembersQuery = useQuery({
+  const { data: selectedThreadMembers } = useQuery({
     queryKey: activeConversationId
       ? teamsKeys.threadMembers(activeTenantId, activeConversationId)
       : ([
@@ -197,13 +197,13 @@ export function useProductivityWorkspaceController() {
   });
   const selectedConversationMembers = useMemo(
     () =>
-      selectedItem?.kind !== "dm" && selectedThreadMembersQuery.data?.length
-        ? selectedThreadMembersQuery.data
+      selectedItem?.kind !== "dm" && selectedThreadMembers?.length
+        ? selectedThreadMembers
         : (selectedItem?.conversation.members ?? []),
     [
       selectedItem?.conversation.members,
       selectedItem?.kind,
-      selectedThreadMembersQuery.data,
+      selectedThreadMembers,
     ],
   );
   const selectedProfileConversations = useMemo<Conversation[]>(
@@ -585,7 +585,7 @@ export function useProductivityWorkspaceController() {
     [activeTenantId, selfAvatarSrc],
   );
   useEffect(() => {
-    const requestedConversationId = openConversationRequest.data;
+    const requestedConversationId = openConversationRequest;
     if (!requestedConversationId) return;
     const requestedItem = sidebarItemById[requestedConversationId];
     if (!requestedItem) return;
@@ -594,7 +594,7 @@ export function useProductivityWorkspaceController() {
     setMembersSidebarOpen(false);
     setProfileSidebarProfile(null);
     queryClient.setQueryData(["open-conversation-request"], null);
-  }, [openConversationRequest.data, queryClient, sidebarItemById]);
+  }, [openConversationRequest, queryClient, sidebarItemById]);
 
   useEffect(() => {
     if (selectionFocusTarget !== "composer") return;

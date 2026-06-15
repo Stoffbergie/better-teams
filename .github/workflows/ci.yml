@@ -38,6 +38,9 @@ jobs:
       - name: Check
         run: bun run check
 
+      - name: React Doctor
+        run: bun run doctor
+
       - name: Unit tests with coverage
         run: bun run test:coverage
 

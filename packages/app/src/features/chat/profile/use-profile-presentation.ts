@@ -231,7 +231,12 @@ export function useTeamsProfilePresentation(args: {
     [activeTenantId, profileMris],
   );
 
-  const priorityAvatarQuery = useQuery({
+  const {
+    data: priorityAvatarData,
+    isFetching: priorityAvatarFetching,
+    isPending: priorityAvatarPending,
+    isSuccess: priorityAvatarSuccess,
+  } = useQuery({
     queryKey: teamsKeys.profileAvatars(activeTenantId, prioritySignature),
     queryFn: () =>
       fetchProfilesWithPersonCache({
@@ -250,7 +255,11 @@ export function useTeamsProfilePresentation(args: {
     retryDelay: (attempt) => Math.min(2000 * 2 ** attempt, 12_000),
   });
 
-  const backgroundAvatarQuery = useQuery({
+  const {
+    data: backgroundAvatarData,
+    isFetching: backgroundAvatarFetching,
+    isPending: backgroundAvatarPending,
+  } = useQuery({
     queryKey: teamsKeys.profileAvatars(activeTenantId, profileMriSignature),
     queryFn: () =>
       fetchProfilesWithPersonCache({
@@ -261,13 +270,13 @@ export function useTeamsProfilePresentation(args: {
       Boolean(activeTenantId) &&
       profileMris.length > 0 &&
       profileMriSignature !== prioritySignature &&
-      priorityAvatarQuery.isSuccess,
+      priorityAvatarSuccess,
     staleTime: 3_600_000,
     gcTime: PROFILE_QUERY_GC_MS,
     placeholderData: () =>
       mergeProfilePresentations([
         profilePersonCache.presentation,
-        priorityAvatarQuery.data,
+        priorityAvatarData,
       ]),
     retry: 2,
     retryDelay: (attempt) => Math.min(2000 * 2 ** attempt, 12_000),
@@ -277,25 +286,21 @@ export function useTeamsProfilePresentation(args: {
     () =>
       mergeProfilePresentations([
         profilePersonCache.presentation,
-        priorityAvatarQuery.data,
-        backgroundAvatarQuery.data,
+        priorityAvatarData,
+        backgroundAvatarData,
       ]),
-    [
-      backgroundAvatarQuery.data,
-      priorityAvatarQuery.data,
-      profilePersonCache.presentation,
-    ],
+    [backgroundAvatarData, priorityAvatarData, profilePersonCache.presentation],
   );
-  const priorityAvatarPending =
+  const isPriorityAvatarLoading =
     Boolean(activeTenantId) &&
     priorityProfileMris.length > 0 &&
-    (priorityAvatarQuery.isPending || priorityAvatarQuery.isFetching);
-  const backgroundAvatarPending =
+    (priorityAvatarPending || priorityAvatarFetching);
+  const isBackgroundAvatarLoading =
     Boolean(activeTenantId) &&
     profileMris.length > 0 &&
     profileMriSignature !== prioritySignature &&
-    priorityAvatarQuery.isSuccess &&
-    (backgroundAvatarQuery.isPending || backgroundAvatarQuery.isFetching);
+    priorityAvatarSuccess &&
+    (backgroundAvatarPending || backgroundAvatarFetching);
   const profilePersonCacheComplete =
     profilePersonCache.missingMris.length === 0;
 
@@ -309,11 +314,11 @@ export function useTeamsProfilePresentation(args: {
       ...profilePresentation,
       avatarFallbackReady:
         profilePersonCacheComplete ||
-        (!priorityAvatarPending && !backgroundAvatarPending),
+        (!isPriorityAvatarLoading && !isBackgroundAvatarLoading),
     }),
     [
-      backgroundAvatarPending,
-      priorityAvatarPending,
+      isBackgroundAvatarLoading,
+      isPriorityAvatarLoading,
       profilePersonCacheComplete,
       profilePresentation,
     ],

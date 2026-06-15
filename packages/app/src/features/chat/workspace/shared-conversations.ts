@@ -33,7 +33,10 @@ export function useSharedConversationLookup({
         .sort(),
     [allSidebarItems],
   );
-  const sharedConversationDetailsQuery = useQuery({
+  const {
+    data: sharedConversationDetails,
+    isPending: sharedConversationDetailsPending,
+  } = useQuery({
     queryKey: [
       "teams",
       "shared-thread-members",
@@ -105,8 +108,7 @@ export function useSharedConversationLookup({
       Boolean(profileSidebarMri) && sharedConversationCandidateIds.length > 0,
     staleTime: 5 * 60_000,
   });
-  const detailedSharedConversationById =
-    sharedConversationDetailsQuery.data ?? {};
+  const detailedSharedConversationById = sharedConversationDetails ?? {};
 
   const sharedConversationsByMri = useMemo(
     () =>
@@ -130,6 +132,6 @@ export function useSharedConversationLookup({
     loading:
       Boolean(profileSidebarMri) &&
       sharedConversationCandidateIds.length > 0 &&
-      sharedConversationDetailsQuery.isPending,
+      sharedConversationDetailsPending,
   };
 }

@@ -179,7 +179,7 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
   );
   const [pendingTenantId, setPendingTenantId] = useState<string | null>(null);
 
-  const accountsQuery = useQuery({
+  const { data: accountsData } = useQuery({
     queryKey: teamsKeys.accounts(),
     queryFn: loadAvailableAccounts,
     initialData: initialAccounts,
@@ -189,8 +189,8 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
   });
 
   const accounts = useMemo(
-    () => normalizeAccounts(accountsQuery.data),
-    [accountsQuery.data],
+    () => normalizeAccounts(accountsData),
+    [accountsData],
   );
 
   const selectedTenantId = resolveSelectedTenantId(
@@ -202,7 +202,7 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
       ? cachedSession
       : undefined;
 
-  const sessionQuery = useQuery({
+  const { data: sessionData } = useQuery({
     queryKey: teamsKeys.session(selectedTenantId),
     queryFn: async () => initializeTeamsSession(selectedTenantId),
     initialData: cachedSessionForSelection,
@@ -217,10 +217,10 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
   }, [accounts]);
 
   useEffect(() => {
-    if (!sessionQuery.data) return;
-    writeCachedSession(sessionQuery.data);
-    setCachedSession(sessionQuery.data);
-  }, [sessionQuery.data]);
+    if (!sessionData) return;
+    writeCachedSession(sessionData);
+    setCachedSession(sessionData);
+  }, [sessionData]);
 
   const switchAccount = useCallback(
     (tenantId: string | null) => {
@@ -254,9 +254,7 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
   );
 
   const activeTenantId =
-    selectedTenantId ??
-    sessionTenantForSelection(sessionQuery.data) ??
-    undefined;
+    selectedTenantId ?? sessionTenantForSelection(sessionData) ?? undefined;
 
   const value = useMemo<TeamsAccountContextValue>(
     () => ({
@@ -266,7 +264,7 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
       pendingTenantId,
       isSwitchingAccount:
         pendingTenantId != null && pendingTenantId === selectedTenantId,
-      activeSession: sessionQuery.data,
+      activeSession: sessionData,
       switchAccount,
       persistedPreference,
     }),
@@ -276,7 +274,7 @@ export function TeamsAccountProvider({ children }: { children: ReactNode }) {
       pendingTenantId,
       persistedPreference,
       selectedTenantId,
-      sessionQuery.data,
+      sessionData,
       switchAccount,
     ],
   );

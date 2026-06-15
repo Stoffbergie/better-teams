@@ -121,12 +121,6 @@ export function useThreadSearch({
     };
   }, []);
 
-  useEffect(() => {
-    if (normalizedSearchQuery) return;
-    searchMatchStateRef.current = { query: "", index: -1 };
-    setHighlightedMessageId(null);
-  }, [normalizedSearchQuery]);
-
   return {
     highlightedMessageId,
     matchingMessageIds,

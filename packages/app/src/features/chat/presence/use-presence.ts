@@ -99,7 +99,7 @@ export function useTeamsPresence(args: {
     [presenceMris],
   );
 
-  const query = useQuery({
+  const { data } = useQuery({
     queryKey: teamsKeys.presence(activeTenantId, signature),
     queryFn: () => fetchPresence(activeTenantId, presenceMris),
     enabled: documentVisible && resumeReady && presenceMris.length > 0,
@@ -113,5 +113,5 @@ export function useTeamsPresence(args: {
     retry: 1,
   });
 
-  return query.data ?? EMPTY_PRESENCE_BY_MRI;
+  return data ?? EMPTY_PRESENCE_BY_MRI;
 }

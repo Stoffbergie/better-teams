@@ -160,7 +160,12 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
     const viewportRef = useRef<HTMLDivElement>(null);
     const topSentinelRef = useRef<HTMLLIElement>(null);
 
-    const threadQuery = useQuery({
+    const {
+      data: threadQueryData,
+      isError: threadQueryError,
+      isPending: threadQueryPending,
+      refetch: refetchThread,
+    } = useQuery({
       queryKey: teamsKeys.thread(tenantId, conversationId),
       queryFn: async () => {
         return measurePerfAsync(
@@ -180,7 +185,7 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
       enabled: liveSessionReady,
       staleTime: 25_000,
     });
-    const threadMembersQuery = useQuery({
+    const { data: threadMembersData } = useQuery({
       queryKey: teamsKeys.threadMembers(tenantId, conversationId),
       queryFn: async () =>
         measurePerfAsync(
@@ -191,7 +196,7 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
       enabled: liveSessionReady,
       staleTime: 60_000,
     });
-    const consumptionHorizonsQuery = useQuery({
+    const { data: consumptionHorizonsData } = useQuery({
       queryKey: teamsKeys.threadConsumptionHorizons(tenantId, conversationId),
       queryFn: async () => {
         return teamsThreadService.getMembersConsumptionHorizon(
@@ -204,10 +209,10 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
       retry: 1,
     });
 
-    const threadData = threadQuery.data ?? null;
+    const threadData = threadQueryData ?? null;
     const rawMessages = threadData?.messages ?? [];
-    const threadMembers = threadMembersQuery.data ?? [];
-    const threadLoading = threadQuery.isPending;
+    const threadMembers = threadMembersData ?? [];
+    const threadLoading = threadQueryPending;
     const threadHasData = Boolean(threadData);
     const profileConversations = useMemo<Conversation[]>(
       () =>
@@ -300,7 +305,7 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
       return h ? [h] : [];
     }, [consumptionHorizon]);
     const memberHorizons = useMemo<MemberReadReceipt[]>(() => {
-      return (consumptionHorizonsQuery.data?.consumptionhorizons ?? [])
+      return (consumptionHorizonsData?.consumptionhorizons ?? [])
         .map((entry) => {
           const parsed = parseConsumptionHorizon(entry.consumptionhorizon);
           if (!parsed) return null;
@@ -311,7 +316,7 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
           } satisfies MemberReadReceipt;
         })
         .filter((entry): entry is MemberReadReceipt => entry != null);
-    }, [consumptionHorizonsQuery.data?.consumptionhorizons]);
+    }, [consumptionHorizonsData?.consumptionhorizons]);
     const peerHorizons = useMemo(() => {
       if (memberHorizons.length > 0) {
         return memberHorizons
@@ -732,7 +737,7 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
           </div>
         ) : null}
         <div className="bg-background px-0 pt-4 pb-4">
-          {threadQuery.isError ? (
+          {threadQueryError ? (
             <div className="flex flex-col items-center gap-4 py-24">
               <div className="flex size-12 items-center justify-center rounded-2xl bg-destructive/10">
                 <span className="text-xl">!</span>
@@ -742,7 +747,7 @@ export const ThreadView = forwardRef<ThreadViewHandle, ThreadViewProps>(
               </p>
               <button
                 type="button"
-                onClick={() => void threadQuery.refetch()}
+                onClick={() => void refetchThread()}
                 className="rounded-xl bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Try again

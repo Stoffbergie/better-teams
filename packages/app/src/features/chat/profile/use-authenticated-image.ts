@@ -11,7 +11,7 @@ export function useAuthenticatedImage(
 ): { src: string | null; loading: boolean; error: boolean } {
   const queryImageUrl = imageUrl ?? null;
   const queryTenantId = tenantId ?? null;
-  const query = useQuery({
+  const { data, isError, isFetched, isLoading } = useQuery({
     queryKey: ["authenticated-image", queryTenantId, queryImageUrl],
     enabled: Boolean(queryImageUrl && queryTenantId),
     staleTime: 30 * 60_000,
@@ -27,8 +27,8 @@ export function useAuthenticatedImage(
   });
 
   return {
-    src: query.data ?? null,
-    loading: query.isLoading,
-    error: query.isError || (query.isFetched && !query.data),
+    src: data ?? null,
+    loading: isLoading,
+    error: isError || (isFetched && !data),
   };
 }

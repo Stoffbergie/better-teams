@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 const RESUME_COOLDOWN_MS = 3_000;
 
@@ -25,12 +25,17 @@ export function useDocumentVisibility(): boolean {
 export function useResumeCooldown(delayMs = RESUME_COOLDOWN_MS): boolean {
   const documentVisible = useDocumentVisibility();
   const [resumeReady, setResumeReady] = useState(documentVisible);
+  const previousVisibleRef = useRef(documentVisible);
+
+  if (previousVisibleRef.current !== documentVisible) {
+    previousVisibleRef.current = documentVisible;
+    if (!documentVisible && resumeReady) {
+      setResumeReady(false);
+    }
+  }
 
   useEffect(() => {
-    if (!documentVisible) {
-      setResumeReady(false);
-      return;
-    }
+    if (!documentVisible) return;
     const timer = window.setTimeout(() => {
       setResumeReady(true);
     }, delayMs);

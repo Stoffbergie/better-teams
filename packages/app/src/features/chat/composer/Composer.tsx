@@ -526,11 +526,10 @@ export function Composer({
       .slice(0, 6);
   }, [deferredMentionQuery, mentionCandidates]);
 
-  useEffect(() => {
-    if (highlightedMentionIndex >= filteredMentionCandidates.length) {
-      setHighlightedMentionIndex(0);
-    }
-  }, [filteredMentionCandidates.length, highlightedMentionIndex]);
+  const activeHighlightedMentionIndex =
+    highlightedMentionIndex < filteredMentionCandidates.length
+      ? highlightedMentionIndex
+      : 0;
 
   useEffect(() => {
     if (!linkDraft) return;
@@ -637,7 +636,7 @@ export function Composer({
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
                   const candidate =
-                    filteredMentionCandidates[highlightedMentionIndex];
+                    filteredMentionCandidates[activeHighlightedMentionIndex];
                   if (candidate) applyMention(candidate);
                   return;
                 }
@@ -671,7 +670,7 @@ export function Composer({
                   onClick={() => applyMention(candidate)}
                   className={cn(
                     "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
-                    index === highlightedMentionIndex
+                    index === activeHighlightedMentionIndex
                       ? "bg-accent text-foreground"
                       : "hover:bg-accent/60",
                   )}
